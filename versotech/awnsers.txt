@@ -1,0 +1,52 @@
+Lista de funcionários ordenando pelo salário decrescente.
+- select * from vendedores order by salario desc
+
+Lista de pedidos de vendas ordenado por data de emissão.
+- select * from pedidos order by data_emissao
+
+Valor de faturamento por cliente.
+- select id_cliente, sum(valor_total) from pedido group by id_cliente
+
+Valor de faturamento por empresa.
+- select id_empresa, sum(valor_total) from pedido group by id_empresa
+
+Valor de faturamento por vendedor.
+- select sum(pedido.valor_total), vendedores.id_vendedor 
+    from pedido join clientes 
+    on pedido.id_cliente = clientes.id_cliente
+    join vendedores 
+    on clientes.id_vendedor = vendedores.id_vendedor
+	group by vendedores.id_vendedor
+
+
+create view ultimoPrecoPraticado AS (
+    select itens_pedido.id_produto, pedido.id_cliente, itens_pedido.preco_praticado, pedido.data_emissao,
+	    ROW_NUMBER() OVER (PARTITION BY itens_pedido.id_produto, pedido.id_cliente ORDER BY pedido.data_emissao DESC) AS rn
+    from itens_pedido join pedido 
+    on itens_pedido.id_pedido = pedido.id_pedido
+);
+select 
+    produtos.id_produto, 
+    produtos.descricao as descricao_produto, 
+    clientes.id_cliente, 
+    clientes.razao_social as clientes_razao_social, 
+    empresa.id_empresa, 
+    empresa.razao_social as empresa_razao_social,
+    vendedores.id_vendedor,
+    vendedores.nome nome_vendedor,
+    config_preco_produto.preco_minimo,  
+    config_preco_produto.preco_maximo,
+    COALESCE(ultimo.preco_praticado, config_preco_produto.preco_minimo) as preco_base
+from 
+    produtos
+join config_preco_produto
+    on produtos.id_produto = config_preco_produto.id_produto
+join (select * from ultimoPrecoPraticado where rn = 1) ultimo
+    on produtos.id_produto = ultimo.id_produto
+join clientes
+    on ultimo.id_cliente = clientes.id_cliente
+join empresa
+    on empresa.id_empresa = clientes.id_empresa
+join vendedores 
+    on vendedores.id_vendedor = clientes.id_vendedor
+order by produtos.id_produto, clientes.id_cliente
