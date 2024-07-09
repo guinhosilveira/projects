@@ -143,15 +143,3 @@ td form button {
     font-weight: 700;
     font-size: 1.2rem;
 }
-
-@keyframes fromBottom {
-    0% {
-        opacity: 0;
-        transform: translateY(+4rem);
-    }
-
-    100% {
-        opacity: 1;
-        transform: translateY(0);
-    }
-}
